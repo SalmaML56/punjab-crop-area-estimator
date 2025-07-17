@@ -1,4 +1,5 @@
 import streamlit as st
+st.runtime.legacy_caching.disable_telemetry()
 st.set_option("browser.gatherUsageStats", False)  # ✅ Inline telemetry disable
 
 import pickle
