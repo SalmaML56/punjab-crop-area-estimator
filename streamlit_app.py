@@ -1,3 +1,16 @@
+import os
+import streamlit as st
+
+# 🚫 Hard patch telemetry write path
+try:
+    streamlit_path = "/tmp/.streamlit"
+    os.makedirs(streamlit_path, exist_ok=True)
+    os.environ["STREAMLIT_PATH"] = streamlit_path
+    from streamlit.runtime import metrics_util
+    metrics_util._get_machine_id_v4 = lambda: None
+except Exception:
+    pass
+
 import sys
 # ⛔ Monkeypatch Streamlit's telemetry write logic
 sys.modules['streamlit.runtime.metrics_util'] = type('fake', (), {'_get_machine_id_v4': lambda: None})()
