@@ -1,0 +1,16 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*.so
+
+# MacOS system file
+*.DS_Store
+
+# Logs and temp files
+*.log
+
+# Jupyter notebook autosaves
+.ipynb_checkpoints/
+
+# Hugging Face config (optional — ignore if you’ll recreate on Space)
+.streamlit/config.toml
