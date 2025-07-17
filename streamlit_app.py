@@ -1,4 +1,6 @@
 import streamlit as st
+st.set_option("browser.gatherUsageStats", False)  # ✅ Inline telemetry disable
+
 import pickle
 import numpy as np
 import os
@@ -34,7 +36,6 @@ rainfall = st.slider("Rainfall (mm)", min_value=0, max_value=500, value=100, ste
 # --- Encode Inputs ---
 encoded_crop = encoder_crop.transform([selected_crop])[0]
 encoded_district = encoder_district.transform([selected_district])[0]
-
 features = np.array([[encoded_crop, encoded_district, rainfall]])
 
 # --- Predict Safely ---
