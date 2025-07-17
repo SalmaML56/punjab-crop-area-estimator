@@ -1,6 +1,14 @@
 import streamlit as st
 st.runtime.legacy_caching.disable_telemetry()
 st.set_option("browser.gatherUsageStats", False)  # ✅ Inline telemetry disable
+import streamlit as st
+
+# 🛑 Force-disable telemetry (safe Hugging Face workaround)
+try:
+    import streamlit.runtime.metrics_util
+    streamlit.runtime.metrics_util._get_machine_id_v4 = lambda: None
+except Exception:
+    pass
 
 import pickle
 import numpy as np
