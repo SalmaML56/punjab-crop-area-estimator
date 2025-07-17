@@ -1,3 +1,6 @@
+import sys
+# ⛔ Monkeypatch Streamlit's telemetry write logic
+sys.modules['streamlit.runtime.metrics_util'] = type('fake', (), {'_get_machine_id_v4': lambda: None})()
 import streamlit as st
 st.runtime.legacy_caching.disable_telemetry()
 st.set_option("browser.gatherUsageStats", False)  # ✅ Inline telemetry disable
