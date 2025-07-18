@@ -3,3 +3,4 @@ gradio
 pandas
 numpy
 scikit-learn
+catboost
