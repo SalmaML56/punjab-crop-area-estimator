@@ -3,8 +3,7 @@ import streamlit as st
 import pickle
 import numpy as np
 
-# ✅ Disable telemetry safely
-st.set_option("browser.gatherUsageStats", False)
+# ✅ No telemetry config needed — Streamlit Cloud handles it internally
 
 # --- Safe Path Handling ---
 BASE_DIR = os.path.dirname(__file__)
