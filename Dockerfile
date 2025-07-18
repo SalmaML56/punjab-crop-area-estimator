@@ -3,21 +3,21 @@ FROM python:3.9-slim
 # Create non-root user
 RUN useradd -m -u 1000 user
 
+# Set working directory
+WORKDIR /app
+
+# Create safe .streamlit folder and set ownership
+RUN mkdir -p /app/.streamlit && chown -R user:user /app/.streamlit
+
 # Switch to non-root user
 USER user
 
-# Set environment path
-ENV PATH="/home/user/.local/bin:$PATH"
-
-# Create safe .streamlit folder
-WORKDIR /app
-RUN mkdir -p /app/.streamlit
-
-# Set telemetry folder
+# Set environment variables
 ENV STREAMLIT_HOME=/app/.streamlit
 ENV STREAMLIT_TELEMETRY=0
+ENV PATH="/home/user/.local/bin:$PATH"
 
-# Copy files
+# Copy files with correct ownership
 COPY --chown=user . /app
 
 # Install dependencies
