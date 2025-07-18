@@ -1,20 +1,73 @@
-import gradio as gr
-import pandas as pd
+import os
+import streamlit as st
+
+# 🚫 Hard patch telemetry write path
+try:
+    streamlit_path = "/tmp/.streamlit"
+    os.makedirs(streamlit_path, exist_ok=True)
+    os.environ["STREAMLIT_PATH"] = streamlit_path
+    from streamlit.runtime import metrics_util
+    metrics_util._get_machine_id_v4 = lambda: None
+except Exception:
+    pass
+
+import sys
+sys.modules['streamlit.runtime.metrics_util'] = type('fake', (), {'_get_machine_id_v4': lambda: None})()
+import streamlit as st
+st.runtime.legacy_caching.disable_telemetry()
+st.set_option("browser.gatherUsageStats", False)  # ✅ Inline telemetry disable
+import streamlit as st
+
+# 🛑 Force-disable telemetry (safe Hugging Face workaround)
+try:
+    import streamlit.runtime.metrics_util
+    streamlit.runtime.metrics_util._get_machine_id_v4 = lambda: None
+except Exception:
+    pass
+
+import pickle
 import numpy as np
-from crop_yield_model import predict_crop_area  # Assuming you have this function
+import os
 
-def estimate_area(rainfall, crop_type, district):
-    # You can modify this logic based on your model
-    result = predict_crop_area(rainfall, crop_type, district)
-    return f"Estimated crop area: {result} hectares"
+# --- Safe Path Handling ---
+BASE_DIR = os.path.dirname(__file__)
+model_path = os.path.join(BASE_DIR, "models", "model.pkl")
+crop_encoder_path = os.path.join(BASE_DIR, "models", "encoder_crop.pkl")
+district_encoder_path = os.path.join(BASE_DIR, "models", "encoder_district.pkl")
 
-inputs = [
-    gr.Number(label="Rainfall (mm)"),
-    gr.Textbox(label="Crop Type"),
-    gr.Textbox(label="District")
-]
+# --- Load Model and Encoders ---
+try:
+    model = pickle.load(open(model_path, "rb"))
+    encoder_crop = pickle.load(open(crop_encoder_path, "rb"))
+    encoder_district = pickle.load(open(district_encoder_path, "rb"))
+except Exception as e:
+    st.error(f"Failed to load model or encoders: {e}")
+    st.stop()
 
-outputs = gr.Textbox(label="Prediction")
+# --- Dropdown Options ---
+valid_crops = [c for c in encoder_crop.classes_ if c.lower() != "unknown"]
+valid_districts = [d for d in encoder_district.classes_ if d.lower() != "unknown"]
 
-demo = gr.Interface(fn=estimate_area, inputs=inputs, outputs=outputs, title="Punjab Crop Area Estimator")
-demo.launch()
+# --- Streamlit UI ---
+st.set_page_config(page_title="Crop Area Estimator", layout="centered")
+st.header("🌾 Punjab Crop Area Estimator")
+st.write("Estimate cultivation area using rainfall, crop type, and district.")
+
+selected_crop = st.selectbox("Select Crop Type", valid_crops)
+selected_district = st.selectbox("Select District", valid_districts)
+rainfall = st.slider("Rainfall (mm)", min_value=0, max_value=500, value=100, step=10)
+
+# --- Encode Inputs ---
+encoded_crop = encoder_crop.transform([selected_crop])[0]
+encoded_district = encoder_district.transform([selected_district])[0]
+features = np.array([[encoded_crop, encoded_district, rainfall]])
+
+# --- Predict Safely ---
+try:
+    predicted_area = model.predict(features)[0]
+    st.success(
+        f"Estimated cultivation area for **{selected_crop}** in **{selected_district}** "
+        f"with **{rainfall} mm** rainfall is approximately **{predicted_area:.2f} acres**."
+    )
+except Exception as e:
+    st.error(f"Prediction failed: {e}")
